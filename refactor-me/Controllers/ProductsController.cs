@@ -10,106 +10,187 @@ namespace refactor_me.Controllers
     {
         [Route]
         [HttpGet]
-        public Products GetAll()
+        public IEnumerable<Product> GetAll()
         {
-            return new Products();
+            List<Product> products = new Product().GetProducts();
+
+            if (products == null)
+            {
+                throw new HttpResponseException(HttpStatusCode.NotFound);
+            }
+            return products;
         }
 
         [Route]
         [HttpGet]
-        public Products SearchByName(string name)
+        public IEnumerable<Product> SearchByName(string name)
         {
-            return new Products(name);
-        }
+            List<Product> products = new Product().GetProducts();
+            var product = products.Where((p) => p.Name.ToLower().Contains(name.ToLower()));
 
-        [Route("{id}")]
-        [HttpGet]
-        public Product GetProduct(Guid id)
-        {
-            var product = new Product(id);
-            if (product.IsNew)
+            if (product == null)
+            {
                 throw new HttpResponseException(HttpStatusCode.NotFound);
+            }
 
             return product;
         }
 
+        [Route("{id}")]
+        [HttpGet]
+        public IHttpActionResult GetProduct(Guid id)
+        {
+            List<Product> products = new Product().GetProducts();
+            var product = products.FirstOrDefault((p) => p.Id == id);
+
+            if (product.IsNew)
+                throw new HttpResponseException(HttpStatusCode.NotFound);
+
+            return Ok(product);
+        }
+
         [Route]
         [HttpPost]
-        public void Create(Product product)
+        public string Create(Product product)
         {
-            product.Save();
+            try
+            {
+                product.Save();
+
+                return "Saved successfully.";
+            }
+            catch (Exception ex)
+            {
+                return "Failed: " + ex.Message;
+            }
+            
         }
 
         [Route("{id}")]
         [HttpPut]
-        public void Update(Guid id, Product product)
+        public string Update(Guid id, Product product)
         {
-            var orig = new Product(id)
+            try
             {
-                Name = product.Name,
-                Description = product.Description,
-                Price = product.Price,
-                DeliveryPrice = product.DeliveryPrice
-            };
+                var orig = new Product(id)
+                {
+                    Name = product.Name,
+                    Description = product.Description,
+                    Price = product.Price,
+                    DeliveryPrice = product.DeliveryPrice
+                };
 
-            if (!orig.IsNew)
-                orig.Save();
+                if (!orig.IsNew)
+                    orig.Save();
+
+                return "Updated successfully.";
+            }
+            catch (Exception ex)
+            {
+                return "Failed: " + ex.Message;
+            }
+            
         }
 
         [Route("{id}")]
         [HttpDelete]
-        public void Delete(Guid id)
+        public string Delete(Guid id)
         {
-            var product = new Product(id);
-            product.Delete();
+            try
+            {
+                var product = new Product(id);
+                product.Delete();
+
+                return "Deleted successfully.";
+            }
+            catch (Exception ex)
+            {
+                return "Failed: " + ex.Message;
+            }
+            
         }
 
         [Route("{productId}/options")]
         [HttpGet]
-        public ProductOptions GetOptions(Guid productId)
+        public IHttpActionResult GetOptions(Guid productId)
         {
-            return new ProductOptions(productId);
+            var options = new ProductOptions(productId);
+            if(options == null)
+            {
+                throw new HttpResponseException(HttpStatusCode.NotFound);
+            }
+            return Ok(options);
         }
 
         [Route("{productId}/options/{id}")]
         [HttpGet]
-        public ProductOption GetOption(Guid productId, Guid id)
+        public IHttpActionResult GetOption(Guid productId, Guid id)
         {
             var option = new ProductOption(id);
             if (option.IsNew)
                 throw new HttpResponseException(HttpStatusCode.NotFound);
 
-            return option;
+            return Ok(option);
         }
 
         [Route("{productId}/options")]
         [HttpPost]
-        public void CreateOption(Guid productId, ProductOption option)
+        public string CreateOption(Guid productId, ProductOption option)
         {
-            option.ProductId = productId;
-            option.Save();
+            try
+            {
+                option.ProductId = productId;
+                option.Save();
+
+                return "Saved successfully.";
+            }
+            catch (Exception ex)
+            {
+                return "Failed: " + ex.Message;
+            }
+            
         }
 
         [Route("{productId}/options/{id}")]
         [HttpPut]
-        public void UpdateOption(Guid id, ProductOption option)
+        public string UpdateOption(Guid id, ProductOption option)
         {
-            var orig = new ProductOption(id)
+            try
             {
-                Name = option.Name,
-                Description = option.Description
-            };
+                var orig = new ProductOption(id)
+                {
+                    Name = option.Name,
+                    Description = option.Description
+                };
 
-            if (!orig.IsNew)
-                orig.Save();
+                if (!orig.IsNew)
+                    orig.Save();
+
+                return "Updated successfully.";
+            }
+            catch (Exception ex)
+            {
+                return "Failed: " + ex.Message;
+            }
+            
         }
 
         [Route("{productId}/options/{id}")]
         [HttpDelete]
-        public void DeleteOption(Guid id)
+        public string DeleteOption(Guid id)
         {
-            var opt = new ProductOption(id);
-            opt.Delete();
+            try
+            {
+                var opt = new ProductOption(id);
+                opt.Delete();
+
+                return "Deleted successfully.";
+            }
+            catch (Exception ex)
+            {
+                return "Failed: " + ex.Message;
+            }
+            
         }
     }
 }
